@@ -37,7 +37,7 @@ type Resource struct {
 	DB        *sql.DB `json:"-"`
 }
 
-func (r *Resource) Get(id uint64) (Record, error) {
+func (r Resource) Get(id uint64) (Record, error) {
 	row, err := DBGetRow(r.DB, "select * from "+quote(r.Name)+" where id = ?", id)
 
 	if err != nil {
