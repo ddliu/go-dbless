@@ -5,9 +5,12 @@ package dbless
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/spf13/cast"
 )
 
 func DBScalar(db *sql.DB, sql string, args ...interface{}) (uint64, error) {
@@ -20,6 +23,43 @@ func DBScalar(db *sql.DB, sql string, args ...interface{}) (uint64, error) {
 	}
 
 	return count, nil
+}
+
+type PagedRows struct {
+	Pagination
+	List []map[string]interface{} `json:"list"`
+}
+
+func DBGetPaging(db *sql.DB, pageSize uint, page uint, sql string, args ...interface{}) (*PagedRows, error) {
+	totalSql := "select count(*) from (" + sql + ")"
+	total, err := DBScalar(db, totalSql, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	pagination := Pagination{
+		Page:     page,
+		PageSize: pageSize,
+	}
+
+	pagination.Valid()
+	pagination.SetTotal(cast.ToUint(total))
+
+	result := &PagedRows{
+		Pagination: pagination,
+	}
+	if total > 0 {
+		offset, limit := pagination.GetOffsetLimit()
+		rowsSql := sql + " " + fmt.Sprintf("limit %d, %d", offset, limit)
+		rows, err := DBGetRows(db, rowsSql, args...)
+		if err != nil {
+			return nil, err
+		}
+
+		result.List = rows
+	}
+
+	return result, nil
 }
 
 func DBGetRows(db *sql.DB, sql string, args ...interface{}) ([]map[string]interface{}, error) {

@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/spf13/cast"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -88,5 +90,26 @@ func TestResource(t *testing.T) {
 	_, err = resource.Get(3)
 	if !IsRecordNotFound(err) {
 		t.Error("delete failed")
+	}
+}
+
+func TestUtils(t *testing.T) {
+	db := newResource().DB
+
+	for i := 1; i <= 100; i++ {
+		id, err := DBInsert(db, "test", map[string]interface{}{
+			"name":       fmt.Sprintf("record%d", i),
+			"created_at": "",
+			"updated_at": "",
+		})
+
+		if err != nil || cast.ToInt(id) != i {
+			t.Error("insert error: ", err)
+		}
+	}
+
+	result, err := DBGetPaging(db, 10, 2, "select * from test order by id asc")
+	if err != nil || result.Pagination.PageTotal != 10 || len(result.List) != 10 || cast.ToString(result.List[0]["name"]) != "record11" {
+		t.Error("paging error:", result, result.Pagination.PageTotal, err)
 	}
 }
