@@ -31,7 +31,7 @@ type PagedRows struct {
 }
 
 func DBGetPaging(db *sql.DB, pageSize uint, page uint, sql string, args ...interface{}) (*PagedRows, error) {
-	totalSql := "select count(*) from (" + sql + ")"
+	totalSql := "select count(*) from (" + sql + ") __t"
 	total, err := DBScalar(db, totalSql, args...)
 	if err != nil {
 		return nil, err
