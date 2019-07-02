@@ -5,6 +5,7 @@ package dbless
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"database/sql"
@@ -75,7 +76,7 @@ func (r Resource) Save(record Record) (uint64, error) {
 
 type ListInput struct {
 	Pagination Pagination `json: "pagination"`
-	// Filter map[string]interface{}
+	Filter     Filter     `json:"filter"`
 }
 
 type ListOutput struct {
@@ -84,8 +85,22 @@ type ListOutput struct {
 }
 
 func (r Resource) List(input ListInput) (*ListOutput, error) {
-	sqlTotal := "SELECT COUNT(*) FROM " + quote(r.Name)
-	total, err := DBScalar(r.DB, sqlTotal)
+	var where []string
+	var params []interface{}
+	if input.Filter != nil {
+		for k, v := range input.Filter {
+			where = append(where, fmt.Sprintf("%s = ?", quote(k)))
+			params = append(params, v)
+		}
+	}
+
+	var whereStr string
+	if len(where) > 0 {
+		whereStr = " WHERE " + strings.Join(where, " AND ")
+	}
+
+	sqlTotal := "SELECT COUNT(*) FROM " + quote(r.Name) + whereStr
+	total, err := DBScalar(r.DB, sqlTotal, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +111,8 @@ func (r Resource) List(input ListInput) (*ListOutput, error) {
 	var list []Record
 	if total != 0 {
 		offset, limit := input.Pagination.GetOffsetLimit()
-		sqlRows := fmt.Sprintf("SELECT * FROM %s ORDER BY id DESC LIMIT %d, %d", quote(r.Name), offset, limit)
-		rows, err := DBGetRows(r.DB, sqlRows)
+		sqlRows := fmt.Sprintf("SELECT * FROM %s %s ORDER BY id DESC LIMIT %d, %d", quote(r.Name), whereStr, offset, limit)
+		rows, err := DBGetRows(r.DB, sqlRows, params...)
 		if err != nil {
 			return nil, err
 		}

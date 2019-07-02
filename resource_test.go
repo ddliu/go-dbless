@@ -81,6 +81,21 @@ func TestResource(t *testing.T) {
 		t.Error("list failed")
 	}
 
+	// filter
+	rst, err = resource.List(ListInput{
+		Filter: Filter{
+			"name": "record9",
+		},
+		Pagination: Pagination{
+			PageSize: 10,
+			Page:     1,
+		},
+	})
+
+	if err != nil || rst.Pagination.Total != 1 || rst.List[0]["name"] != "record9" {
+		t.Error("filter failed")
+	}
+
 	// delete
 	err = resource.Delete(3)
 	if err != nil {
