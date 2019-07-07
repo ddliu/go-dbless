@@ -61,7 +61,7 @@ func TestResource(t *testing.T) {
 	// get
 	record, err := resource.Get(1)
 	if err != nil || record["name"] != "record1" {
-		t.Error("get record failed")
+		t.Error("get record failed", err)
 	}
 
 	for i := 2; i <= 100; i++ {
@@ -105,6 +105,25 @@ func TestResource(t *testing.T) {
 	_, err = resource.Get(3)
 	if !IsRecordNotFound(err) {
 		t.Error("delete failed")
+	}
+
+	// update by name
+	_, err = resource.Save(Record{
+		"name": "updated",
+	}, Filter{
+		"name": "record2",
+	})
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	r, err := resource.Get(Filter{
+		"name": "updated",
+	})
+
+	if err != nil || r.ID() != 2 {
+		t.Error("Save & Get by name failed")
 	}
 }
 

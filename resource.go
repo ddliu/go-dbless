@@ -5,7 +5,6 @@ package dbless
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"database/sql"
@@ -40,8 +39,17 @@ type Resource struct {
 	DB        *sql.DB `json:"-"`
 }
 
-func (r Resource) Get(id uint64) (Record, error) {
-	row, err := DBGetRow(r.DB, "select * from "+quote(r.Name)+" where id = ?", id)
+func (r Resource) Get(filter interface{}) (Record, error) {
+	f, ok := filter.(Filter)
+	if !ok {
+		f = Filter{
+			"id": filter,
+		}
+	}
+
+	where, params := f.GetWhere()
+
+	row, err := DBGetRow(r.DB, "select * from "+quote(r.Name)+" where "+where, params...)
 
 	if err != nil {
 		return nil, err
@@ -50,7 +58,28 @@ func (r Resource) Get(id uint64) (Record, error) {
 	return Record(row), nil
 }
 
-func (r Resource) Save(record Record) (uint64, error) {
+func (r Resource) Save(record Record, filter ...Filter) (uint64, error) {
+	activeFilter := Filter{}
+
+	if len(filter) > 0 {
+		for _, f := range filter {
+			for k, v := range f {
+				activeFilter[k] = v
+			}
+		}
+	}
+
+	if len(activeFilter) > 0 {
+		existing, err := r.Get(activeFilter)
+		if IsRecordNotFound(err) {
+
+		} else if err != nil {
+			return 0, err
+		} else {
+			record["id"] = existing["id"]
+		}
+	}
+
 	id := record.ID()
 
 	delete(record, "id")
@@ -87,18 +116,14 @@ type ListOutput struct {
 }
 
 func (r Resource) List(input ListInput) (*ListOutput, error) {
-	var where []string
 	var params []interface{}
+	var whereStr string
 	if input.Filter != nil {
-		for k, v := range input.Filter {
-			where = append(where, fmt.Sprintf("%s = ?", quote(k)))
-			params = append(params, v)
-		}
+		whereStr, params = input.Filter.GetWhere()
 	}
 
-	var whereStr string
-	if len(where) > 0 {
-		whereStr = " WHERE " + strings.Join(where, " AND ")
+	if whereStr != "" {
+		whereStr = " WHERE " + whereStr
 	}
 
 	sqlTotal := "SELECT COUNT(*) FROM " + quote(r.Name) + whereStr
@@ -129,7 +154,15 @@ func (r Resource) List(input ListInput) (*ListOutput, error) {
 	}, nil
 }
 
-func (r Resource) Delete(id uint64) error {
-	_, err := DBDelete(r.DB, r.Name, "id = ?", id)
+func (r Resource) Delete(filter interface{}) error {
+	f, ok := filter.(Filter)
+	if !ok {
+		f = Filter{
+			"id": filter,
+		}
+	}
+
+	where, params := f.GetWhere()
+	_, err := DBDelete(r.DB, r.Name, where, params...)
 	return err
 }
