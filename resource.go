@@ -19,6 +19,7 @@ type Field struct {
 	Name        string `json:"name"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
+	Meta        string `json:"meta"`
 }
 
 func (r Record) ID() uint64 {
@@ -35,6 +36,7 @@ type Resource struct {
 	Title     string  `json:"title"`
 	Fields    []Field `json:"fields"`
 	Timestamp bool    `json:"timestamp"`
+	Meta      string  `json:"meta"`
 	DB        *sql.DB `json:"-"`
 }
 
