@@ -32,6 +32,7 @@ func (p *Pagination) Valid() {
 }
 
 func (p *Pagination) SetTotal(total uint) {
+	p.Valid()
 	p.Total = total
 	p.PageTotal = uint(math.Ceil(float64(p.Total) / float64(p.PageSize)))
 }
