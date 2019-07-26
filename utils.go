@@ -5,6 +5,7 @@ package dbless
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -12,6 +13,17 @@ import (
 
 	"github.com/spf13/cast"
 )
+
+type Record map[string]interface{}
+
+func (r Record) Unmarshal(input interface{}) error {
+	data, err := json.Marshal(r)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(data, input)
+}
 
 func DBScalar(db *sql.DB, sql string, args ...interface{}) (uint64, error) {
 	row := db.QueryRow(sql, args...)
@@ -27,7 +39,7 @@ func DBScalar(db *sql.DB, sql string, args ...interface{}) (uint64, error) {
 
 type PagedRows struct {
 	Pagination
-	List []map[string]interface{} `json:"list"`
+	List []Record `json:"list"`
 }
 
 func DBGetPaging(db *sql.DB, pageSize uint, page uint, sql string, args ...interface{}) (*PagedRows, error) {
@@ -62,7 +74,7 @@ func DBGetPaging(db *sql.DB, pageSize uint, page uint, sql string, args ...inter
 	return result, nil
 }
 
-func DBGetRows(db *sql.DB, sql string, args ...interface{}) ([]map[string]interface{}, error) {
+func DBGetRows(db *sql.DB, sql string, args ...interface{}) ([]Record, error) {
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		return nil, err
@@ -90,7 +102,7 @@ func DBGetRows(db *sql.DB, sql string, args ...interface{}) ([]map[string]interf
 	for index, _ := range receiver {
 		t := columnTypes[index]
 		switch t.DatabaseTypeName() {
-		case "INT", "BIGINT":
+		case "INT", "BIGINT", "INTEGER":
 			var v int64
 			receiver[index] = &v
 		case "DECIMAL":
@@ -120,7 +132,7 @@ func DBGetRows(db *sql.DB, sql string, args ...interface{}) ([]map[string]interf
 		// }
 	}
 
-	var result []map[string]interface{}
+	var result []Record
 
 	defer rows.Close()
 	for rows.Next() {
@@ -134,13 +146,13 @@ func DBGetRows(db *sql.DB, sql string, args ...interface{}) ([]map[string]interf
 			item[columns[i]] = reflect.ValueOf(v).Elem().Interface()
 		}
 
-		result = append(result, item)
+		result = append(result, Record(item))
 	}
 
 	return result, nil
 }
 
-func DBGetRow(db *sql.DB, sql string, args ...interface{}) (map[string]interface{}, error) {
+func DBGetRow(db *sql.DB, sql string, args ...interface{}) (Record, error) {
 	rows, err := DBGetRows(db, sql, args...)
 	if err != nil {
 		return nil, err

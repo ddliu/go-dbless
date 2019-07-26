@@ -12,8 +12,6 @@ import (
 	"github.com/spf13/cast"
 )
 
-type Record map[string]interface{}
-
 type Field struct {
 	Name        string `json:"name"`
 	Title       string `json:"title"`
@@ -55,7 +53,7 @@ func (r Resource) Get(filter interface{}) (Record, error) {
 		return nil, err
 	}
 
-	return Record(row), nil
+	return row, nil
 }
 
 func (r Resource) Save(record Record, filter ...Filter) (uint64, error) {
@@ -145,7 +143,7 @@ func (r Resource) List(input ListInput) (*ListOutput, error) {
 		}
 
 		for _, row := range rows {
-			list = append(list, Record(row))
+			list = append(list, row)
 		}
 	}
 	return &ListOutput{

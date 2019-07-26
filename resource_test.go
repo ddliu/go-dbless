@@ -146,4 +146,17 @@ func TestUtils(t *testing.T) {
 	if err != nil || result.Pagination.PageTotal != 10 || len(result.List) != 10 || cast.ToString(result.List[0]["name"]) != "record11" {
 		t.Error("paging error:", result, result.Pagination.PageTotal, err)
 	}
+
+	// unmarshal
+	type Test struct {
+		ID   uint64 `json:"id"`
+		Name string `json:"name"`
+	}
+
+	m := Test{}
+	err = result.List[0].Unmarshal(&m)
+
+	if err != nil || m.Name != "record11" {
+		t.Error("unmarshal error", err, m, result.List[0])
+	}
 }
