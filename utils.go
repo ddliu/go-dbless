@@ -5,11 +5,13 @@ package dbless
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
+
+	"github.com/go-sql-driver/mysql"
 
 	"github.com/spf13/cast"
 )
@@ -74,8 +76,8 @@ func DBGetPaging(db *sql.DB, pageSize uint, page uint, sql string, args ...inter
 	return result, nil
 }
 
-func DBGetRows(db *sql.DB, sql string, args ...interface{}) ([]Record, error) {
-	stmt, err := db.Prepare(sql)
+func DBGetRows(db *sql.DB, sqlStr string, args ...interface{}) ([]Record, error) {
+	stmt, err := db.Prepare(sqlStr)
 	if err != nil {
 		return nil, err
 	}
@@ -103,16 +105,16 @@ func DBGetRows(db *sql.DB, sql string, args ...interface{}) ([]Record, error) {
 		t := columnTypes[index]
 		switch t.DatabaseTypeName() {
 		case "INT", "BIGINT", "INTEGER":
-			var v int64
+			var v sql.NullInt64
 			receiver[index] = &v
 		case "DECIMAL":
-			var v float64
+			var v sql.NullFloat64
 			receiver[index] = &v
 		case "TIMESTAMP", "DATETIME":
-			var v time.Time
+			var v mysql.NullTime
 			receiver[index] = &v
 		default:
-			var v string
+			var v sql.NullString
 			receiver[index] = &v
 		}
 
@@ -143,7 +145,16 @@ func DBGetRows(db *sql.DB, sql string, args ...interface{}) ([]Record, error) {
 
 		item := make(map[string]interface{})
 		for i, v := range receiver {
-			item[columns[i]] = reflect.ValueOf(v).Elem().Interface()
+			if vv, ok := v.(driver.Valuer); ok {
+				vvv, err := vv.Value()
+				if err != nil {
+					return nil, err
+				}
+
+				item[columns[i]] = vvv
+			} else {
+				item[columns[i]] = reflect.ValueOf(v).Elem().Interface()
+			}
 		}
 
 		result = append(result, Record(item))

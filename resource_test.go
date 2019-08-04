@@ -160,3 +160,11 @@ func TestUtils(t *testing.T) {
 		t.Error("unmarshal error", err, m, result.List[0])
 	}
 }
+
+func TestNull(t *testing.T) {
+	db := newResource().DB
+	row, err := DBGetRow(db, "select 1 as num, null as name")
+	if err != nil || row["name"] != nil {
+		t.Errorf("nullable error")
+	}
+}
