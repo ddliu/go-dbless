@@ -235,5 +235,12 @@ func DBDelete(db *sql.DB, table string, where string, args ...interface{}) (uint
 }
 
 func quote(identifier string) string {
-	return "`" + identifier + "`"
+	if strings.Contains(identifier, ".") {
+	}
+	l := strings.Split(identifier, ".")
+	for k, v := range l {
+		l[k] = "`" + v + "`"
+	}
+
+	return strings.Join(l, ".")
 }
