@@ -25,6 +25,12 @@ go get -u github.com/ddliu/go-dbless
 - DBGetRow
 - DBGetScalar
 
+### Schema
+
+- List databases
+- List tables
+- List columns
+
 ### Resource
 
 ```go
