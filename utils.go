@@ -104,7 +104,7 @@ func DBGetRows(db *sql.DB, sqlStr string, args ...interface{}) ([]Record, error)
 	for index, _ := range receiver {
 		t := columnTypes[index]
 		switch t.DatabaseTypeName() {
-		case "INT", "BIGINT", "INTEGER":
+		case "INT", "BIGINT", "INTEGER", "TINYINT":
 			var v sql.NullInt64
 			receiver[index] = &v
 		case "DECIMAL":
