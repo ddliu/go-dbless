@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"database/sql"
-
 	"github.com/spf13/cast"
 )
 
@@ -34,7 +32,7 @@ type Resource struct {
 	Fields    []Field `json:"fields"`
 	Timestamp bool    `json:"timestamp"`
 	Meta      string  `json:"meta"`
-	DB        *sql.DB `json:"-"`
+	DB        *DB     `json:"-"`
 }
 
 func (r Resource) Get(filter interface{}) (Record, error) {
@@ -45,9 +43,9 @@ func (r Resource) Get(filter interface{}) (Record, error) {
 		}
 	}
 
-	where, params := f.GetWhere()
+	where, params := f.GetWhere(r.DB)
 
-	row, err := DBGetRow(r.DB, "select * from "+quote(r.Name)+" where "+where, params...)
+	row, err := r.DB.GetRow("select * from "+r.DB.Driver.QuoteIdentifier(r.Name)+" where "+where, params...)
 
 	if err != nil {
 		return nil, err
@@ -89,7 +87,7 @@ func (r Resource) Save(record Record, filter ...Filter) (uint64, error) {
 			record["updated_at"] = time.Now()
 		}
 
-		_, err := DBUpdate(r.DB, r.Name, record, "id = ?", id)
+		_, err := r.DB.Update(r.Name, record, "id = ?", id)
 		return id, err
 	} else {
 		if r.Timestamp {
@@ -97,7 +95,7 @@ func (r Resource) Save(record Record, filter ...Filter) (uint64, error) {
 			record["updated_at"] = time.Now()
 		}
 
-		id, err := DBInsert(r.DB, r.Name, record)
+		id, err := r.DB.Insert(r.Name, record)
 
 		return id, err
 	}
@@ -117,15 +115,15 @@ func (r Resource) List(input ListInput) (*ListOutput, error) {
 	var params []interface{}
 	var whereStr string
 	if input.Filter != nil {
-		whereStr, params = input.Filter.GetWhere()
+		whereStr, params = input.Filter.GetWhere(r.DB)
 	}
 
 	if whereStr != "" {
 		whereStr = " WHERE " + whereStr
 	}
 
-	sqlTotal := "SELECT COUNT(*) FROM " + quote(r.Name) + whereStr
-	total, err := DBScalar(r.DB, sqlTotal, params...)
+	sqlTotal := "SELECT COUNT(*) FROM " + r.DB.Driver.QuoteIdentifier(r.Name) + whereStr
+	total, err := r.DB.Scalar(sqlTotal, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -136,8 +134,8 @@ func (r Resource) List(input ListInput) (*ListOutput, error) {
 	var list []Record
 	if total != 0 {
 		offset, limit := input.Pagination.GetOffsetLimit()
-		sqlRows := fmt.Sprintf("SELECT * FROM %s %s ORDER BY id DESC LIMIT %d, %d", quote(r.Name), whereStr, offset, limit)
-		rows, err := DBGetRows(r.DB, sqlRows, params...)
+		sqlRows := fmt.Sprintf("SELECT * FROM %s %s ORDER BY id DESC LIMIT %d, %d", r.DB.Driver.QuoteIdentifier(r.Name), whereStr, offset, limit)
+		rows, err := r.DB.GetRows(sqlRows, params...)
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +158,7 @@ func (r Resource) Delete(filter interface{}) error {
 		}
 	}
 
-	where, params := f.GetWhere()
-	_, err := DBDelete(r.DB, r.Name, where, params...)
+	where, params := f.GetWhere(r.DB)
+	_, err := r.DB.Delete(r.Name, where, params...)
 	return err
 }

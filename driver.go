@@ -2,12 +2,13 @@ package dbless
 
 import (
 	"database/sql"
+
 	"github.com/spf13/cast"
 )
 
-func listDatabaseByQuery(db *sql.DB, query string, name string, exclude []string) ([]string, error) {
+func listDatabaseByQuery(db *DB, query string, name string, exclude []string) ([]string, error) {
 	var result []string
-	records, err := DBGetRows(db, query)
+	records, err := db.GetRows(query)
 	if err != nil {
 		return nil, err
 	}
@@ -32,9 +33,9 @@ func listDatabaseByQuery(db *sql.DB, query string, name string, exclude []string
 	return result, nil
 }
 
-func listTableByQuery(db *sql.DB, query string, name string, params ...interface{}) ([]string, error) {
+func listTableByQuery(db *DB, query string, name string, params ...interface{}) ([]string, error) {
 	var result []string
-	records, err := DBGetRows(db, query, params...)
+	records, err := db.GetRows(query, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -48,13 +49,13 @@ func listTableByQuery(db *sql.DB, query string, name string, params ...interface
 	return result, nil
 }
 
-func listColumnsByQuery(db *sql.DB, dbname, tableName string) ([]*sql.ColumnType, error) {
-	tableName = quote(tableName)
+func listColumnsByQuery(db *DB, dbname, tableName string) ([]*sql.ColumnType, error) {
+	tableName = db.Driver.QuoteIdentifier(tableName)
 	if dbname != "" {
-		dbname = quote(dbname)
+		dbname = db.Driver.QuoteIdentifier(dbname)
 		tableName = dbname + "." + tableName
 	}
-	rows, err := db.Query("select * from " + tableName + " limit 0")
+	rows, err := db.DB.Query("select * from " + tableName + " limit 0")
 	if err != nil {
 		return nil, err
 	}
@@ -79,9 +80,9 @@ func (e DriverNotImplementedError) Error() string {
 type Driver interface {
 	Name() string
 	QuoteIdentifier(string) string
-	ListDatabases(db *sql.DB) ([]string, error)
-	ListTables(db *sql.DB, dbname string) ([]string, error)
-	ListColumns(db *sql.DB, dbname string, tablename string) ([]*sql.ColumnType, error)
+	ListDatabases(db *DB) ([]string, error)
+	ListTables(db *DB, dbname string) ([]string, error)
+	ListColumns(db *DB, dbname string, tablename string) ([]*sql.ColumnType, error)
 }
 
 var drivers = map[string]Driver{}

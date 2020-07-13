@@ -13,7 +13,7 @@ func (m *PostgresDriver) QuoteIdentifier(v string) string {
 	return "\"" + v + "\""
 }
 
-func (m *PostgresDriver) ListDatabases(db *sql.DB) ([]string, error) {
+func (m *PostgresDriver) ListDatabases(db *DB) ([]string, error) {
 	return listDatabaseByQuery(db,
 		"SELECT datname FROM pg_catalog.pg_database",
 		"datname",
@@ -22,7 +22,7 @@ func (m *PostgresDriver) ListDatabases(db *sql.DB) ([]string, error) {
 		})
 }
 
-func (m *PostgresDriver) ListTables(db *sql.DB, dbname string) ([]string, error) {
+func (m *PostgresDriver) ListTables(db *DB, dbname string) ([]string, error) {
 	return listTableByQuery(
 		db,
 		"SELECT tablename FROM pg_catalog.pg_tables where schemaname = ?",
@@ -30,7 +30,7 @@ func (m *PostgresDriver) ListTables(db *sql.DB, dbname string) ([]string, error)
 		dbname)
 }
 
-func (m *PostgresDriver) ListColumns(db *sql.DB, dbname string, tablename string) ([]*sql.ColumnType, error) {
+func (m *PostgresDriver) ListColumns(db *DB, dbname string, tablename string) ([]*sql.ColumnType, error) {
 	return listColumnsByQuery(db, dbname, tablename)
 }
 

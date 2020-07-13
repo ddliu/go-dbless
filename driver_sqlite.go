@@ -13,11 +13,11 @@ func (m *Sqlite3Driver) QuoteIdentifier(v string) string {
 	return "\"" + v + "\""
 }
 
-func (m *Sqlite3Driver) ListDatabases(db *sql.DB) ([]string, error) {
+func (m *Sqlite3Driver) ListDatabases(db *DB) ([]string, error) {
 	return nil, DriverNotImplementedError{}
 }
 
-func (m *Sqlite3Driver) ListTables(db *sql.DB, dbname string) ([]string, error) {
+func (m *Sqlite3Driver) ListTables(db *DB, dbname string) ([]string, error) {
 	return nil, DriverNotImplementedError{}
 	// return listTableByQuery(
 	// 	db,
@@ -26,7 +26,7 @@ func (m *Sqlite3Driver) ListTables(db *sql.DB, dbname string) ([]string, error) 
 	// 	dbname)
 }
 
-func (m *Sqlite3Driver) ListColumns(db *sql.DB, dbname string, tablename string) ([]*sql.ColumnType, error) {
+func (m *Sqlite3Driver) ListColumns(db *DB, dbname string, tablename string) ([]*sql.ColumnType, error) {
 	return listColumnsByQuery(db, dbname, tablename)
 }
 

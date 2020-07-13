@@ -13,7 +13,7 @@ func (m *SqlServerDriver) QuoteIdentifier(v string) string {
 	return "\"" + v + "\""
 }
 
-func (m *SqlServerDriver) ListDatabases(db *sql.DB) ([]string, error) {
+func (m *SqlServerDriver) ListDatabases(db *DB) ([]string, error) {
 	return listDatabaseByQuery(db,
 		"SELECT name FROM master.sys.databases",
 		"name",
@@ -22,7 +22,7 @@ func (m *SqlServerDriver) ListDatabases(db *sql.DB) ([]string, error) {
 		})
 }
 
-func (m *SqlServerDriver) ListTables(db *sql.DB, dbname string) ([]string, error) {
+func (m *SqlServerDriver) ListTables(db *DB, dbname string) ([]string, error) {
 	return listTableByQuery(
 		db,
 		"SELECT TABLE_NAME FROM databaseName.INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_CATALOG = ?",
@@ -30,7 +30,7 @@ func (m *SqlServerDriver) ListTables(db *sql.DB, dbname string) ([]string, error
 		dbname)
 }
 
-func (m *SqlServerDriver) ListColumns(db *sql.DB, dbname string, tablename string) ([]*sql.ColumnType, error) {
+func (m *SqlServerDriver) ListColumns(db *DB, dbname string, tablename string) ([]*sql.ColumnType, error) {
 	return listColumnsByQuery(db, dbname, tablename)
 }
 

@@ -47,3 +47,8 @@ func NewPagination(pageSize, page uint) *Pagination {
 
 	return p
 }
+
+type PagedRows struct {
+	Pagination
+	List []Record `json:"list"`
+}

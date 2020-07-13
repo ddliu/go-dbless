@@ -13,7 +13,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func newDB() *sql.DB {
+func newDB() *DB {
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		panic(err)
@@ -32,7 +32,7 @@ func newDB() *sql.DB {
 		panic(err)
 	}
 
-	return db
+	return New("sqlite3", db)
 }
 
 func newResource() Resource {
@@ -131,7 +131,7 @@ func TestUtils(t *testing.T) {
 	db := newResource().DB
 
 	for i := 1; i <= 100; i++ {
-		id, err := DBInsert(db, "test", map[string]interface{}{
+		id, err := db.Insert("test", map[string]interface{}{
 			"name":       fmt.Sprintf("record%d", i),
 			"created_at": "",
 			"updated_at": "",
@@ -142,7 +142,7 @@ func TestUtils(t *testing.T) {
 		}
 	}
 
-	result, err := DBGetPaging(db, 10, 2, "select * from test order by id asc")
+	result, err := db.GetPaging(10, 2, "select * from test order by id asc")
 	if err != nil || result.Pagination.PageTotal != 10 || len(result.List) != 10 || cast.ToString(result.List[0]["name"]) != "record11" {
 		t.Error("paging error:", result, result.Pagination.PageTotal, err)
 	}
@@ -163,7 +163,7 @@ func TestUtils(t *testing.T) {
 
 func TestNull(t *testing.T) {
 	db := newResource().DB
-	row, err := DBGetRow(db, "select 1 as num, null as name")
+	row, err := db.GetRow("select 1 as num, null as name")
 	if err != nil || row["name"] != nil {
 		t.Errorf("nullable error")
 	}

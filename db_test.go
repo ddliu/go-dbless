@@ -5,7 +5,7 @@ import (
 )
 
 func TestDB(t *testing.T) {
-	db := New("sqlite3", newDB())
+	db := newDB()
 	columns, err := db.ListColumns("", "test")
 	if err != nil {
 		t.Error(err)
