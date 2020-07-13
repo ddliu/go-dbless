@@ -28,6 +28,15 @@ func (m *UnknownDriver) ListColumns(db *dbless.DB, dbname string, tablename stri
 	return dbless.ListColumnsByQuery(db, dbname, tablename)
 }
 
+func (m *UnknownDriver) Placeholder(values []interface{}) []string {
+	var result []string
+	for range values {
+		result = append(result, "?")
+	}
+
+	return result
+}
+
 func init() {
 	dbless.RegisterDriver(&UnknownDriver{})
 }

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/ddliu/go-dbless"
 )
@@ -36,6 +37,15 @@ func (m *PostgresDriver) ListTables(db *dbless.DB, dbname string) ([]string, err
 
 func (m *PostgresDriver) ListColumns(db *dbless.DB, dbname string, tablename string) ([]*sql.ColumnType, error) {
 	return dbless.ListColumnsByQuery(db, dbname, tablename)
+}
+
+func (m *PostgresDriver) Placeholder(values []interface{}) []string {
+	var result []string
+	for i := range values {
+		result = append(result, fmt.Sprintf("$%d", i+1))
+	}
+
+	return result
 }
 
 func init() {

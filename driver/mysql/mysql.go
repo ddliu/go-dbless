@@ -37,6 +37,15 @@ func (m *MysqlDriver) ListColumns(db *dbless.DB, dbname string, tablename string
 	return dbless.ListColumnsByQuery(db, dbname, tablename)
 }
 
+func (m *MysqlDriver) Placeholder(values []interface{}) []string {
+	var result []string
+	for range values {
+		result = append(result, "?")
+	}
+
+	return result
+}
+
 func init() {
 	dbless.RegisterDriver(&MysqlDriver{})
 }

@@ -218,7 +218,7 @@ func (db *DB) Insert(table string, row map[string]interface{}) (uint64, error) {
 	for k, v := range row {
 		columns = append(columns, db.Driver.QuoteIdentifier(k))
 		values = append(values, v)
-		placeHolders = append(placeHolders, "? ")
+		placeHolders = db.Driver.Placeholder(values)
 	}
 	sql := "INSERT INTO " + db.Driver.QuoteIdentifier(table) + " (" + strings.Join(columns, ", ") + ") VALUES (" + strings.Join(placeHolders, ", ") + ")"
 
@@ -236,8 +236,13 @@ func (db *DB) Update(table string, row map[string]interface{}, where string, arg
 	var values []interface{}
 
 	for k, v := range row {
-		columns = append(columns, db.Driver.QuoteIdentifier(k)+" = ?")
+		columns = append(columns, k)
 		values = append(values, v)
+	}
+
+	placeholders := db.Driver.Placeholder(values)
+	for i, placeholder := range placeholders {
+		columns[i] = db.Driver.QuoteIdentifier(columns[i]) + " = " + placeholder
 	}
 
 	sql := "UPDATE " + db.Driver.QuoteIdentifier(table) + " SET " + strings.Join(columns, ", ")

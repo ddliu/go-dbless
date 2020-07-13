@@ -38,6 +38,15 @@ func (m *SqlServerDriver) ListColumns(db *dbless.DB, dbname string, tablename st
 	return dbless.ListColumnsByQuery(db, dbname, tablename)
 }
 
+func (m *SqlServerDriver) Placeholder(values []interface{}) []string {
+	var result []string
+	for range values {
+		result = append(result, "?")
+	}
+
+	return result
+}
+
 func init() {
 	dbless.RegisterDriver(&SqlServerDriver{})
 }

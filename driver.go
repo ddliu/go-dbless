@@ -80,6 +80,7 @@ func (e DriverNotImplementedError) Error() string {
 type Driver interface {
 	Name() string
 	QuoteIdentifier(string) string
+	Placeholder(values []interface{}) []string
 	ListDatabases(db *DB) ([]string, error)
 	ListTables(db *DB, dbname string) ([]string, error)
 	ListColumns(db *DB, dbname string, tablename string) ([]*sql.ColumnType, error)
