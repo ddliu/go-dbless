@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-func listDatabaseByQuery(db *DB, query string, name string, exclude []string) ([]string, error) {
+func ListDatabaseByQuery(db *DB, query string, name string, exclude []string) ([]string, error) {
 	var result []string
 	records, err := db.GetRows(query)
 	if err != nil {
@@ -33,7 +33,7 @@ func listDatabaseByQuery(db *DB, query string, name string, exclude []string) ([
 	return result, nil
 }
 
-func listTableByQuery(db *DB, query string, name string, params ...interface{}) ([]string, error) {
+func ListTableByQuery(db *DB, query string, name string, params ...interface{}) ([]string, error) {
 	var result []string
 	records, err := db.GetRows(query, params...)
 	if err != nil {
@@ -49,7 +49,7 @@ func listTableByQuery(db *DB, query string, name string, params ...interface{}) 
 	return result, nil
 }
 
-func listColumnsByQuery(db *DB, dbname, tableName string) ([]*sql.ColumnType, error) {
+func ListColumnsByQuery(db *DB, dbname, tableName string) ([]*sql.ColumnType, error) {
 	tableName = db.Driver.QuoteIdentifier(tableName)
 	if dbname != "" {
 		dbname = db.Driver.QuoteIdentifier(dbname)
@@ -92,6 +92,6 @@ func getDriver(name string) (Driver, bool) {
 	return v, ok
 }
 
-func registerDriver(driver Driver) {
+func RegisterDriver(driver Driver) {
 	drivers[driver.Name()] = driver
 }
