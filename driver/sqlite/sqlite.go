@@ -22,12 +22,10 @@ func (m *Sqlite3Driver) ListDatabases(db *dbless.DB) ([]string, error) {
 }
 
 func (m *Sqlite3Driver) ListTables(db *dbless.DB, dbname string) ([]string, error) {
-	return nil, dbless.DriverNotImplementedError{}
-	// return listTableByQuery(
-	// 	db,
-	// 	"SELECT TABLE_NAME FROM databaseName.INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_CATALOG = ?",
-	// 	"TABLE_NAME",
-	// 	dbname)
+	return dbless.ListTableByQuery(
+		db,
+		"SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%'",
+		"name")
 }
 
 func (m *Sqlite3Driver) ListColumns(db *dbless.DB, dbname string, tablename string) ([]*sql.ColumnType, error) {
