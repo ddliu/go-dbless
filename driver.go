@@ -84,6 +84,7 @@ type Driver interface {
 	ListDatabases(db *DB) ([]string, error)
 	ListTables(db *DB, dbname string) ([]string, error)
 	ListColumns(db *DB, dbname string, tablename string) ([]*sql.ColumnType, error)
+	ScanReceiver(t *sql.ColumnType) (interface{}, error)
 }
 
 var drivers = map[string]Driver{}

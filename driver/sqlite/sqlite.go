@@ -43,6 +43,10 @@ func (m *Sqlite3Driver) Placeholder(values []interface{}) []string {
 	return result
 }
 
+func (m *Sqlite3Driver) ScanReceiver(t *sql.ColumnType) (interface{}, error) {
+	return nil, nil
+}
+
 func init() {
 	dbless.RegisterDriver(&Sqlite3Driver{})
 }

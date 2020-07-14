@@ -17,13 +17,13 @@ type Field struct {
 	Meta        string `json:"meta"`
 }
 
-func (r Record) ID() uint64 {
+func (r Record) ID() string {
 	id, ok := r["id"]
 	if !ok {
-		return 0
+		return ""
 	}
 
-	return cast.ToUint64(id)
+	return cast.ToString(id)
 }
 
 type Resource struct {
@@ -54,7 +54,7 @@ func (r Resource) Get(filter interface{}) (Record, error) {
 	return row, nil
 }
 
-func (r Resource) Save(record Record, filter ...Filter) (uint64, error) {
+func (r Resource) Save(record Record, filter ...Filter) (string, error) {
 	activeFilter := Filter{}
 
 	if len(filter) > 0 {
@@ -70,7 +70,7 @@ func (r Resource) Save(record Record, filter ...Filter) (uint64, error) {
 		if IsRecordNotFound(err) {
 
 		} else if err != nil {
-			return 0, err
+			return "", err
 		} else {
 			record["id"] = existing["id"]
 		}
@@ -82,12 +82,13 @@ func (r Resource) Save(record Record, filter ...Filter) (uint64, error) {
 	delete(record, "created_at")
 	delete(record, "updated_at")
 	// update
-	if id > 0 {
+	if id != "" {
 		if r.Timestamp {
 			record["updated_at"] = time.Now()
 		}
 
-		_, err := r.DB.Update(r.Name, record, "id = ?", id)
+		placeholders := r.DB.Driver.Placeholder([]interface{}{id})
+		_, err := r.DB.Update(r.Name, record, "id = "+placeholders[0], id)
 		return id, err
 	} else {
 		if r.Timestamp {
@@ -95,7 +96,7 @@ func (r Resource) Save(record Record, filter ...Filter) (uint64, error) {
 			record["updated_at"] = time.Now()
 		}
 
-		id, err := r.DB.Insert(r.Name, record)
+		id, err := r.DB.InsertGetID(r.Name, record)
 
 		return id, err
 	}

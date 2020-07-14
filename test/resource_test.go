@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/ddliu/go-dbless"
+	"github.com/spf13/cast"
 )
 
 func doTestResource(resource dbless.Resource) error {
@@ -16,7 +17,7 @@ func doTestResource(resource dbless.Resource) error {
 		"name": "record1",
 	})
 
-	if err != nil || id != 1 {
+	if err != nil || cast.ToInt(id) != 1 {
 		return errors.New("save record failed")
 	}
 
@@ -84,7 +85,7 @@ func doTestResource(resource dbless.Resource) error {
 		"name": "updated",
 	})
 
-	if err != nil || r.ID() != 2 {
+	if err != nil || r.ID() != "2" {
 		return errors.New("Save & Get by name failed")
 	}
 

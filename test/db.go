@@ -3,6 +3,7 @@ package test
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/ddliu/go-dbless"
 	"github.com/spf13/cast"
@@ -31,13 +32,13 @@ func doTestDB(db *dbless.DB) error {
 
 func doTestUtils(db *dbless.DB) error {
 	for i := 1; i <= 100; i++ {
-		id, err := db.Insert("test", map[string]interface{}{
+		id, err := db.InsertGetID("test", map[string]interface{}{
 			"name":       fmt.Sprintf("record%d", i),
-			"created_at": "",
-			"updated_at": "",
+			"created_at": time.Now(),
+			"updated_at": time.Now(),
 		})
 
-		if err != nil || cast.ToInt(id) < i {
+		if err != nil || cast.ToInt(id) != i {
 			return errors.New("insert error: " + err.Error())
 		}
 	}

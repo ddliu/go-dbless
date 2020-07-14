@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/cast"
 )
 
@@ -137,6 +137,16 @@ func (db *DB) GetRows(sqlStr string, args ...interface{}) ([]Record, error) {
 	receiver := make([]interface{}, columnLength)
 	for index, _ := range receiver {
 		t := columnTypes[index]
+		r, err := db.Driver.ScanReceiver(t)
+		if err != nil {
+			return nil, err
+		}
+
+		if r != nil {
+			receiver[index] = r
+			continue
+		}
+
 		switch t.DatabaseTypeName() {
 		case "INT", "BIGINT", "INTEGER", "TINYINT":
 			var v sql.NullInt64
@@ -145,7 +155,7 @@ func (db *DB) GetRows(sqlStr string, args ...interface{}) ([]Record, error) {
 			var v sql.NullFloat64
 			receiver[index] = &v
 		case "TIMESTAMP", "DATETIME":
-			var v mysql.NullTime
+			var v time.Time
 			receiver[index] = &v
 		default:
 			var v sql.NullString
@@ -210,7 +220,7 @@ func (db *DB) GetRow(sql string, args ...interface{}) (Record, error) {
 	return nil, RecordNotFoundError{}
 }
 
-func (db *DB) Insert(table string, row map[string]interface{}) (uint64, error) {
+func (db *DB) Insert(table string, row map[string]interface{}) error {
 	var columns []string
 	var values []interface{}
 	var placeHolders []string
@@ -222,13 +232,38 @@ func (db *DB) Insert(table string, row map[string]interface{}) (uint64, error) {
 	}
 	sql := "INSERT INTO " + db.Driver.QuoteIdentifier(table) + " (" + strings.Join(columns, ", ") + ") VALUES (" + strings.Join(placeHolders, ", ") + ")"
 
-	rst, err := db.DB.Exec(sql, values...)
-	if err != nil {
-		return 0, err
-	}
+	_, err := db.DB.Exec(sql, values...)
+	return err
+}
 
-	id, err := rst.LastInsertId()
-	return uint64(id), err
+func (db *DB) InsertGetID(table string, row map[string]interface{}) (string, error) {
+	var columns []string
+	var values []interface{}
+	var placeHolders []string
+
+	for k, v := range row {
+		columns = append(columns, db.Driver.QuoteIdentifier(k))
+		values = append(values, v)
+		placeHolders = db.Driver.Placeholder(values)
+	}
+	sql := "INSERT INTO " + db.Driver.QuoteIdentifier(table) + " (" + strings.Join(columns, ", ") + ") VALUES (" + strings.Join(placeHolders, ", ") + ")"
+
+	if db.Driver.Name() == "postgres" {
+		sql += " returning id"
+		r, err := db.GetRow(sql, values...)
+		if err != nil {
+			return "", err
+		}
+
+		return cast.ToString(r["id"]), nil
+	} else {
+		rst, err := db.DB.Exec(sql, values...)
+		if err != nil {
+			return "", err
+		}
+		id, err := rst.LastInsertId()
+		return cast.ToString(id), err
+	}
 }
 
 func (db *DB) Update(table string, row map[string]interface{}, where string, args ...interface{}) (uint64, error) {
@@ -240,7 +275,7 @@ func (db *DB) Update(table string, row map[string]interface{}, where string, arg
 		values = append(values, v)
 	}
 
-	placeholders := db.Driver.Placeholder(values)
+	placeholders := db.Driver.Placeholder(append(args, values...))[len(args):]
 	for i, placeholder := range placeholders {
 		columns[i] = db.Driver.QuoteIdentifier(columns[i]) + " = " + placeholder
 	}

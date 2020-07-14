@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/ddliu/go-dbless"
 )
@@ -46,6 +47,22 @@ func (m *PostgresDriver) Placeholder(values []interface{}) []string {
 	}
 
 	return result
+}
+
+func (m *PostgresDriver) ScanReceiver(t *sql.ColumnType) (interface{}, error) {
+	switch t.DatabaseTypeName() {
+	case "INT2", "INT4", "INT8":
+		var v sql.NullInt64
+		return &v, nil
+	case "DECIMAL", "FLOAT4", "FLOAT8":
+		var v sql.NullFloat64
+		return &v, nil
+	case "TIMESTAMP", "DATETIME":
+		var v time.Time
+		return &v, nil
+	}
+
+	return nil, nil
 }
 
 func init() {

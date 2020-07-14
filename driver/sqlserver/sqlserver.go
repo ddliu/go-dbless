@@ -47,6 +47,10 @@ func (m *SqlServerDriver) Placeholder(values []interface{}) []string {
 	return result
 }
 
+func (m *SqlServerDriver) ScanReceiver(t *sql.ColumnType) (interface{}, error) {
+	return nil, nil
+}
+
 func init() {
 	dbless.RegisterDriver(&SqlServerDriver{})
 }
