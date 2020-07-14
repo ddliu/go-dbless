@@ -16,13 +16,16 @@ func newMysqlDB(url string) *dbless.DB {
 		panic(err)
 	}
 
-	_, err = db.Exec(`
+	db.Exec(`
 	DROP table if exists test;
+	`)
+	_, err = db.Exec(`
 	CREATE table test (
-		id  int PRIMARY KEY,
+		id  int NOT NULL AUTO_INCREMENT,
 		name varchar(100) NOT NULL,
 		created_at timestamp NOT NULL,
-		updated_at timestamp NOT NULL
+		updated_at timestamp NOT NULL,
+		PRIMARY KEY (id)
 	);
 	`)
 

@@ -10,21 +10,21 @@ import (
 )
 
 func doTestDB(db *dbless.DB) error {
-	tables, err := db.ListTables("")
-	if err != nil {
-		return err
-	}
+	// tables, err := db.ListTables("")
+	// if err != nil {
+	// 	return err
+	// }
 
-	hasTable := false
-	for _, v := range tables {
-		if v == "test" {
-			hasTable = true
-		}
-	}
+	// hasTable := false
+	// for _, v := range tables {
+	// 	if v == "test" {
+	// 		hasTable = true
+	// 	}
+	// }
 
-	if !hasTable {
-		return errors.New("table not exist")
-	}
+	// if !hasTable {
+	// 	return errors.New("table not exist")
+	// }
 
 	columns, err := db.ListColumns("", "test")
 	if err != nil {
