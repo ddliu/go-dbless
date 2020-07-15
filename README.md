@@ -16,14 +16,23 @@ go get -u github.com/ddliu/go-dbless
 
 ## Usage
 
+```go
+import (
+    "github.com/ddliu/go-dbless"
+    _ "github.com/ddliu/go-dbless/driver/mysql"
+    _ "github.com/go-sql-driver/mysql"
+)
+db := dbless.Open("mysql", "dsn")
+```
+
 ### Basic
 
-- DBInsert
-- DBUpdate
-- DBDelete
-- DBGetRows
-- DBGetRow
-- DBGetScalar
+- Insert
+- Update
+- Delete
+- GetRows
+- GetRow
+- Scalar
 
 ### Schema
 
