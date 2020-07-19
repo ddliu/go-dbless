@@ -21,8 +21,8 @@ func newPostgresDB(url string) *dbless.DB {
 	CREATE table test (
 		id  serial PRIMARY KEY,
 		name varchar(100) NOT NULL,
-		created_at timestamp NOT NULL,
-		updated_at timestamp NOT NULL
+		created_at timestamp NULL,
+		updated_at timestamp NULL
 	);
 	`)
 

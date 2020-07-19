@@ -21,8 +21,8 @@ func newSqliteDB(url string) *dbless.DB {
 	CREATE table test (
 		id  integer PRIMARY KEY AUTOINCREMENT,
 		name text NOT NULL,
-		created_at text NOT NULL,
-		updated_at NOT NULL
+		created_at text NULL,
+		updated_at text NULL
 	);
 	`)
 

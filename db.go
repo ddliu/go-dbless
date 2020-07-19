@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/spf13/cast"
 )
@@ -14,6 +14,7 @@ import (
 type DB struct {
 	DB     *sql.DB
 	Driver Driver
+	Debug  bool
 }
 
 func Open(driverName, dsn string) (*DB, error) {
@@ -42,6 +43,12 @@ func New(driverName string, db *sql.DB) *DB {
 	return rst
 }
 
+func (db *DB) debug(message string, args ...interface{}) {
+	if db.Debug {
+		log.Print(append([]interface{}{message}, args...))
+	}
+}
+
 func (db *DB) ListDatabases() ([]string, error) {
 	if db.Driver == nil {
 		return nil, NoDriverError{}
@@ -67,6 +74,7 @@ func (db *DB) ListColumns(dbname, tablename string) ([]*sql.ColumnType, error) {
 }
 
 func (db *DB) Scalar(sql string, args ...interface{}) (uint64, error) {
+	db.debug(sql, args...)
 	row := db.DB.QueryRow(sql, args...)
 
 	var count uint64
@@ -111,17 +119,13 @@ func (db *DB) GetPaging(pageSize uint, page uint, sql string, args ...interface{
 }
 
 func (db *DB) GetRows(sqlStr string, args ...interface{}) ([]Record, error) {
-	stmt, err := db.DB.Prepare(sqlStr)
+	db.debug(sqlStr, args...)
+	rows, err := db.DB.Query(sqlStr, args...)
 	if err != nil {
 		return nil, err
 	}
 
-	defer stmt.Close()
-
-	rows, err := stmt.Query(args...)
-	if err != nil {
-		return nil, err
-	}
+	defer rows.Close()
 
 	columns, err := rows.Columns()
 	if err != nil {
@@ -155,7 +159,7 @@ func (db *DB) GetRows(sqlStr string, args ...interface{}) ([]Record, error) {
 			var v sql.NullFloat64
 			receiver[index] = &v
 		case "TIMESTAMP", "DATETIME":
-			var v time.Time
+			var v sql.NullTime
 			receiver[index] = &v
 		default:
 			var v sql.NullString
@@ -180,7 +184,6 @@ func (db *DB) GetRows(sqlStr string, args ...interface{}) ([]Record, error) {
 
 	var result []Record
 
-	defer rows.Close()
 	for rows.Next() {
 		err := rows.Scan(receiver...)
 		if err != nil {
@@ -232,6 +235,7 @@ func (db *DB) Insert(table string, row map[string]interface{}) error {
 	}
 	sql := "INSERT INTO " + db.Driver.QuoteIdentifier(table) + " (" + strings.Join(columns, ", ") + ") VALUES (" + strings.Join(placeHolders, ", ") + ")"
 
+	db.debug(sql, values...)
 	_, err := db.DB.Exec(sql, values...)
 	return err
 }
@@ -257,6 +261,7 @@ func (db *DB) InsertGetID(table string, row map[string]interface{}) (string, err
 
 		return cast.ToString(r["id"]), nil
 	} else {
+		db.debug(sql, values...)
 		rst, err := db.DB.Exec(sql, values...)
 		if err != nil {
 			return "", err
@@ -283,9 +288,15 @@ func (db *DB) Update(table string, row map[string]interface{}, where string, arg
 	sql := "UPDATE " + db.Driver.QuoteIdentifier(table) + " SET " + strings.Join(columns, ", ")
 	if where != "" {
 		sql += " WHERE " + where
-		values = append(args, values...)
+		// fix param order, where params comes first
+		if db.Driver.Name() == "postgres" {
+			values = append(args, values...)
+		} else {
+			values = append(values, args...)
+		}
 	}
 
+	db.debug(sql, values...)
 	rst, err := db.DB.Exec(sql, values...)
 	if err != nil {
 		return 0, err
@@ -298,6 +309,7 @@ func (db *DB) Update(table string, row map[string]interface{}, where string, arg
 
 func (db *DB) Delete(table string, where string, args ...interface{}) (uint64, error) {
 	sql := "DELETE FROM " + db.Driver.QuoteIdentifier(table) + " WHERE " + where
+	db.debug(sql, args...)
 	rst, err := db.DB.Exec(sql, args...)
 	if err != nil {
 		return 0, err

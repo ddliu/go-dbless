@@ -3,7 +3,6 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	"time"
 
 	"github.com/ddliu/go-dbless"
 )
@@ -58,7 +57,7 @@ func (m *PostgresDriver) ScanReceiver(t *sql.ColumnType) (interface{}, error) {
 		var v sql.NullFloat64
 		return &v, nil
 	case "TIMESTAMP", "DATETIME":
-		var v time.Time
+		var v sql.NullTime
 		return &v, nil
 	}
 

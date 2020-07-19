@@ -23,8 +23,8 @@ func newMysqlDB(url string) *dbless.DB {
 	CREATE table test (
 		id  int NOT NULL AUTO_INCREMENT,
 		name varchar(100) NOT NULL,
-		created_at timestamp NOT NULL,
-		updated_at timestamp NOT NULL,
+		created_at timestamp NULL,
+		updated_at timestamp NULL,
 		PRIMARY KEY (id)
 	);
 	`)

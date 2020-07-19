@@ -4,7 +4,6 @@ import (
 	"database/sql"
 
 	"github.com/ddliu/go-dbless"
-	"github.com/go-sql-driver/mysql"
 )
 
 type MysqlDriver struct{}
@@ -50,7 +49,7 @@ func (m *MysqlDriver) Placeholder(values []interface{}) []string {
 func (m *MysqlDriver) ScanReceiver(t *sql.ColumnType) (interface{}, error) {
 	switch t.DatabaseTypeName() {
 	case "TIMESTAMP", "DATETIME":
-		var v mysql.NullTime
+		var v sql.NullTime
 		return &v, nil
 	}
 

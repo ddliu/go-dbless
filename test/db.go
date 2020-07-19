@@ -83,8 +83,21 @@ func doTestNull(t *testing.T, db *dbless.DB) {
 		t.Fatal("nullable error", err, row["name"])
 	}
 
-	row, err = db.GetRow("select updated_at from test where updated_at is null")
+	id, err := db.InsertGetID("test", map[string]interface{}{
+		"name":       "null",
+		"updated_at": nil,
+	})
+
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	row, err = db.GetRow("select id, updated_at from test where name = 'null'")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if row.ID() != id {
+		t.Fatal()
 	}
 }

@@ -93,6 +93,6 @@ func doTestResource(t *testing.T, setup setupDB) {
 	})
 
 	if err != nil || r.ID() != "2" {
-		t.Fatal("Save & Get by name failed")
+		t.Fatal("Save & Get by name failed", err, r.ID())
 	}
 }
