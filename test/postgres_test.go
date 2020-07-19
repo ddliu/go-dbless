@@ -36,8 +36,8 @@ func newPostgresDB(url string) *dbless.DB {
 func TestPostgres(t *testing.T) {
 	dbUrl := os.Getenv("POSTGRES_DATABASE_URL")
 	if dbUrl != "" {
-		if err := doTestDB(newPostgresDB(dbUrl)); err != nil {
-			t.Error(err)
-		}
+		doTestDB(t, func() *dbless.DB {
+			return newPostgresDB(dbUrl)
+		})
 	}
 }

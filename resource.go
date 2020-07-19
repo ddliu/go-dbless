@@ -135,7 +135,7 @@ func (r Resource) List(input ListInput) (*ListOutput, error) {
 	var list []Record
 	if total != 0 {
 		offset, limit := input.Pagination.GetOffsetLimit()
-		sqlRows := fmt.Sprintf("SELECT * FROM %s %s ORDER BY id DESC LIMIT %d, %d", r.DB.Driver.QuoteIdentifier(r.Name), whereStr, offset, limit)
+		sqlRows := fmt.Sprintf("SELECT * FROM %s %s ORDER BY id DESC LIMIT %d OFFSET %d", r.DB.Driver.QuoteIdentifier(r.Name), whereStr, limit, offset)
 		rows, err := r.DB.GetRows(sqlRows, params...)
 		if err != nil {
 			return nil, err

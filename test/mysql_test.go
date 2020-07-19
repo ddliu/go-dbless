@@ -39,8 +39,8 @@ func newMysqlDB(url string) *dbless.DB {
 func TestMysql(t *testing.T) {
 	dbUrl := os.Getenv("MYSQL_DATABASE_URL")
 	if dbUrl != "" {
-		if err := doTestDB(newMysqlDB(dbUrl)); err != nil {
-			t.Error(err)
-		}
+		doTestDB(t, func() *dbless.DB {
+			return newMysqlDB(dbUrl)
+		})
 	}
 }

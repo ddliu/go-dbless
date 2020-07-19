@@ -283,7 +283,7 @@ func (db *DB) Update(table string, row map[string]interface{}, where string, arg
 	sql := "UPDATE " + db.Driver.QuoteIdentifier(table) + " SET " + strings.Join(columns, ", ")
 	if where != "" {
 		sql += " WHERE " + where
-		values = append(values, args...)
+		values = append(args, values...)
 	}
 
 	rst, err := db.DB.Exec(sql, values...)

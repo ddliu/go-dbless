@@ -17,12 +17,13 @@ func newSqliteDB(url string) *dbless.DB {
 	}
 
 	_, err = db.Exec(`
+	DROP TABLE IF EXISTS test;
 	CREATE table test (
 		id  integer PRIMARY KEY AUTOINCREMENT,
 		name text NOT NULL,
 		created_at text NOT NULL,
 		updated_at NOT NULL
-	)
+	);
 	`)
 
 	if err != nil {
@@ -35,9 +36,8 @@ func newSqliteDB(url string) *dbless.DB {
 func TestSqlite(t *testing.T) {
 	dbUrl := os.Getenv("SQLITE_DATABASE_URL")
 	if dbUrl != "" {
-		err := doTestDB(newSqliteDB(dbUrl))
-		if err != nil {
-			t.Error(err)
-		}
+		doTestDB(t, func() *dbless.DB {
+			return newSqliteDB(dbUrl)
+		})
 	}
 }
