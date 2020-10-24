@@ -7,11 +7,11 @@ import (
 
 	"github.com/ddliu/go-dbless"
 	_ "github.com/ddliu/go-dbless/driver/postgres"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 func newPostgresDB(url string) *dbless.DB {
-	db, err := sql.Open("postgres", url)
+	db, err := sql.Open("pgx", url)
 	if err != nil {
 		panic(err)
 	}
